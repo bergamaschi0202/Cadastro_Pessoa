@@ -1,0 +1,15 @@
+# VS Code
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# Logs
+*.log
+
+# Arquivos temporários
+*.tmp
+*.bak
+
+# Sistema operacional
+Thumbs.db
+.DS_Store
