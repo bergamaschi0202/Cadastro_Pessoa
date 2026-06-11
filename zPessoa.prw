@@ -1,5 +1,6 @@
 //Biblioteca
 #Include "Totvs.ch"
+#Include "FWMVCDef.ch"
 
 //Variáveis Static
 Static cTitulo := "Cadastro de Pessoa"
@@ -13,6 +14,9 @@ Cadastro de Pessoa
 /*/
 User Function zPessoa(param_name)
     Local oBrowse
+    Local aRotina := {}
+
+    aRotina := MenuDef()
 
     oBrowse := FWMBrowse():New()
     oBrowse:SetDescription(cTitulo)
@@ -20,3 +24,22 @@ User Function zPessoa(param_name)
     oBrowse:Activate()
 
 Return Nil
+
+/*/{Protheus.doc} MenuDef
+Menu de opcoes na funcao zPessoa
+@author Arthur Bergamaschi
+@since 11/06/2026
+@version 1.0
+@type function
+/*/
+Static Function MenuDef()
+    Local aRotina := {}
+
+    ADD OPTION aRotina TITLE "Visualizar" ACTION "VIEWDEF.zPessoa" OPERATION 1 ACCESS 0
+    ADD OPTION aRotina TITLE "Incluir" ACTION "VIEWDEF.zPessoa" OPERATION 3 ACCESS 0
+    ADD OPTION aRotina TITLE "Alterar" ACTION "VIEWDEF.zPessoa" OPERATION 4 ACCESS 0
+    ADD OPTION aRotina TITLE "Excluir" ACTION "VIEWDEF.zPessoa" OPERATION 5 ACCESS 0
+    ADD OPTION aRotina TITLE "Copiar" ACTION "VIEWDEF.zPessoa" OPERATION 9 ACCESS 0
+
+Return aRotina
+
