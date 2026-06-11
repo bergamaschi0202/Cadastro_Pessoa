@@ -12,7 +12,7 @@ Cadastro de Pessoa
 @since 10/06/2026
 @version 1.0
 /*/
-User Function zPessoa(param_name)
+User Function zPessoa()
     Local oBrowse
     Local aRotina := {}
 
@@ -40,6 +40,24 @@ Static Function MenuDef()
     ADD OPTION aRotina TITLE "Alterar" ACTION "VIEWDEF.zPessoa" OPERATION 4 ACCESS 0
     ADD OPTION aRotina TITLE "Excluir" ACTION "VIEWDEF.zPessoa" OPERATION 5 ACCESS 0
     ADD OPTION aRotina TITLE "Copiar" ACTION "VIEWDEF.zPessoa" OPERATION 9 ACCESS 0
+    ADD OPTION aRotina TITLE "Imprir Cadastro" ACTION "U_Imprimir()" ACCESS 0
 
 Return aRotina
 
+/*/{Protheus.doc} MenuDef
+Model de dados
+@author Arthur Bergamaschi
+@since 11/06/2026
+@version 1.0
+@type function
+/*/
+Static Function ModelDef()
+    Local oStruct := FWFormStruct(1, cAliasMVC)
+    Local oModel
+
+Return 
+
+User Function Imprimir()
+    
+
+Return 
