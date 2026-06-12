@@ -40,7 +40,7 @@ Static Function MenuDef()
     ADD OPTION aRotina TITLE "Alterar" ACTION "VIEWDEF.zPessoa" OPERATION 4 ACCESS 0
     ADD OPTION aRotina TITLE "Excluir" ACTION "VIEWDEF.zPessoa" OPERATION 5 ACCESS 0
     ADD OPTION aRotina TITLE "Copiar" ACTION "VIEWDEF.zPessoa" OPERATION 9 ACCESS 0
-    ADD OPTION aRotina TITLE "Imprir Cadastro" ACTION "U_Imprimir()" ACCESS 0
+    //ADD OPTION aRotina TITLE "Imprir Cadastro" ACTION "U_Imprimir()"
 
 Return aRotina
 
@@ -52,10 +52,36 @@ Model de dados
 @type function
 /*/
 Static Function ModelDef()
+    //Montando a estrutua da tabela no Struct
     Local oStruct := FWFormStruct(1, cAliasMVC)
     Local oModel
 
-Return 
+    oModel := MPFormModel():New("zPessoaModel")
+    //Registrando os campos do Struct no MASTER dentro do model
+    oModel:AddFields("ZZ1MASTER", Nil, oStruct)
+    oModel:SetPrimaryKey({})
+
+Return oModel
+
+/*/{Protheus.doc} MenuDef
+View dos campos
+@author Arthur Bergamaschi
+@since 12/06/2026
+@version 1.0
+@type function
+/*/
+Static Function ViewDef()
+    Local oModel := FWLoadModel("zPessoa")
+    Local oStruct := FWFormStruct(2, cAliasMVC)
+    Local oView
+
+    oView := FWFormView():New()
+    oView:SetModel(oModel)
+    oView:AddField("VIEW_ZZ1", oStruct, "ZZ1MASTER")
+    oView:CreateHorizontalBox("Tela", 100)
+    oView:SetOwnerView("VIEW_ZZ1", "Tela")
+
+Return oView
 
 User Function Imprimir()
     
