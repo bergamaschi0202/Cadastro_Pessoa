@@ -40,7 +40,7 @@ Static Function MenuDef()
     ADD OPTION aRotina TITLE "Alterar" ACTION "VIEWDEF.zPessoa" OPERATION 4 ACCESS 0
     ADD OPTION aRotina TITLE "Excluir" ACTION "VIEWDEF.zPessoa" OPERATION 5 ACCESS 0
     ADD OPTION aRotina TITLE "Copiar" ACTION "VIEWDEF.zPessoa" OPERATION 9 ACCESS 0
-    //ADD OPTION aRotina TITLE "Imprir Cadastro" ACTION "U_Imprimir()"
+    ADD OPTION aRotina TITLE "Imprir Cadastro" ACTION "U_Imprimir()" OPERATION 1 ACCESS 0
 
 Return aRotina
 
@@ -85,5 +85,36 @@ Return oView
 
 User Function Imprimir()
     
+    fMontaRel()
 
 Return 
+
+Static Function fMontaRel()
+    Local oPrintPvt
+    Local cQryPes := ""
+    Local cCod := ZZ1->ZZ1_COD
+    ConOut(cCod)
+
+    cQryPes := "SELECT "                          + CRLF
+    cQryPes += "    ZZ1_FILIAL, "                 + CRLF
+    cQryPes += "    ZZ1_COD, "                    + CRLF
+    cQryPes += "    ZZ1_NOME, "                   + CRLF
+    cQryPes += "    ZZ1_SEXO, "                   + CRLF
+    cQryPes += "    ZZ1_DTNASC, "                 + CRLF
+    cQryPes += "    ZZ1_IDADE, "                  + CRLF
+    cQryPes += "    ZZ1_CEP, "                    + CRLF
+    cQryPes += "    ZZ1_RUA, "                    + CRLF
+    cQryPes += "    ZZ1_NUMRUA, "                 + CRLF
+    cQryPes += "    ZZ1_UF, "                     + CRLF
+    cQryPes += "    ZZ1_MUNICI, "                 + CRLF
+    cQryPes += "    ZZ1_DDD, "                    + CRLF
+    cQryPes += "    ZZ1_FONE "                    + CRLF
+    cQryPes += "FROM "                            + CRLF
+    cQryPes += "    " + RetSQLName(cAliasMVC)     + CRLF
+    cQryPes += "WHERE "                           + CRLF
+    cQryPes += "    ZZ1_COD = '" + cCod + "' "    + CRLF
+    cQryPes += "    AND D_E_L_E_T_ = ' ' "        + CRLF
+    ConOut(cQryPes)
+    TCQuery cQryPes New Alias "QRY_PES"
+
+Return oPrintPvt
