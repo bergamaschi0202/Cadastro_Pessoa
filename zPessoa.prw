@@ -2,8 +2,10 @@
 #Include "Totvs.ch"
 #Include "FWMVCDef.ch"
 #Include "TopConn.ch"
+#Include "RPTDef.ch"
+#Include "FWPrintSetup.ch"
 
-//VariÃ¡veis Static
+//Variáveis Static
 Static cTitulo := "Cadastro de Pessoa"
 Static cAliasMVC := "ZZ1"
 
@@ -85,33 +87,37 @@ Static Function ViewDef()
 Return oView
 
 User Function Imprimir()
-    //VariÃ¡veis
+    //Variáveis
     Local aPergs := {}
     Local cCodDe := "000001"
     Local cCodAt := "999999"
     Local aReturn := {}
     Local oProcess
 
-    aAdd(aPergs, {1, "Pessoa De", cCodDe, "", ".T.", "ZZ1", ".F.", 6, .T.})
-    aAdd(aPergs, {1, "Pessoa AtÃ©", cCodAt, "", ".T.", "ZZ1", ".F.", 6, .T.})
+    aAdd(aPergs, {1, "Pessoa De", cCodDe, "", ".T.", "ZZ1", ".T.", 6, .T.})
+    aAdd(aPergs, {1, "Pessoa Até", cCodAt, "", ".T.", "ZZ1", ".T.", 6, .T.})
 
-    If ParamBox(aPergs, "Informe os parÃ¢metros", @aReturn, , , , , , , , .F., .F.)
+    If ParamBox(aPergs, "Informe os parâmetros", @aReturn, , , , , , , , .F., .F.)
         cCodDe := aReturn[1]
         cCodAt := aReturn[2]
 
-        oProcess := MsNewProcess():New({|| fMontaRel(@oProcess, cCodDe, cCodAt) }, "ImpressÃ£o de Cadastros de Pessoas", "Processando", .F.)
+        oProcess := MsNewProcess():New({|| fMontaRel(@oProcess, cCodDe, cCodAt) }, "Impressão de Cadastros de Pessoas", "Processando", .F.)
         oProcess:Activate()
     EndIf
 
 Return
 
 Static Function fMontaRel(oProc, cCodDe, cCodAt)
-    Local oPrintPvt
     Local cQryPes := ""
     Local cCod := ZZ1->ZZ1_COD
     ConOut(cCod)
-    Local cNomeRel := "RelatÃ³rio de Cadastro de Pessoas"
+    Local cNomeRel := "Relatório de Cadastro de Pessoas"
     Local nTotPes := 0
+    Local nLinha := 0
+    Private oFontNormal := TFont():New('Arial', , 15, .F.)
+    Private oFontNegr := TFont():New('Arial', , 15, .T.)
+    Private oFontTit := TFont():New('Arial', , 30, .T.)
+    Private oPrintPvt
 
     oPrintPvt := FWMSPrinter():New(cNomeRel, IMP_PDF, .F., "", .T.)
     oPrintPvt:cPathPDF := GetTempPath()
@@ -132,6 +138,7 @@ Static Function fMontaRel(oProc, cCodDe, cCodAt)
     cQryPes += "    ZZ1_NUMRUA, "                       + CRLF
     cQryPes += "    ZZ1_UF, "                           + CRLF
     cQryPes += "    ZZ1_MUNICI, "                       + CRLF
+    cQryPes += "    ZZ1_EMAIL, "                        + CRLF
     cQryPes += "    ZZ1_DDD, "                          + CRLF
     cQryPes += "    ZZ1_FONE "                          + CRLF
     cQryPes += "FROM "                                  + CRLF
@@ -146,21 +153,70 @@ Static Function fMontaRel(oProc, cCodDe, cCodAt)
     Count To nTotPes
     oProc:SetRegua1(nTotPes)
 
-    oPrintPvt:Say(50, 100, "CÃ³digo")
-    oPrintPvt:Say(50, 250, "Nome")
-    oPrintPvt:Say(50, 400, "Sexo")
-    oPrintPvt:Say(50, 550, "Dt. Nasc.")
-    oPrintPvt:Say(50, 700, "Idade")
-    oPrintPvt:Say(50, 850, "CEP")
-    oPrintPvt:Say(50, 1000, "Rua")
-    oPrintPvt:Say(50, 1150, "NÃºmero da Rua")
-    oPrintPvt:Say(50, 1300, "UF")
-    oPrintPvt:Say(50, 1450, "MunicÃ­pio")
-    oPrintPvt:Say(50, 1600, "DDD")
-    oPrintPvt:Say(50, 1750, "Telefone")
-
     If nTotPes != 0
+        QRY_PES->(DbGoTop())
 
+        While ! QRY_PES->(EoF())
+
+            nLinha := 100
+
+            oProc:IncRegua1()
+
+            oPrintPvt:StartPage()
+
+            // Imprime cabeçalho
+            fImpCab()
+
+
+
+            // Imprimi os dados
+            oPrintPvt:SayAlign(nLinha, 50, "Código: ", oFontNegr, , , , ,                                  )
+            oPrintPvt:SayAlign(nLinha, 300, AllTrim(QRY_PES->ZZ1_COD), oFontNormal, , , , ,                )
+            nLinha += 40
+            oPrintPvt:SayAlign(nLinha, 50, "Nome: ", oFontNegr, , , , ,                                    )
+            oPrintPvt:SayAlign(nLinha, 300, AllTrim(QRY_PES->ZZ1_NOME), oFontNormal, , , , ,               )
+            nLinha += 40
+            oPrintPvt:SayAlign(nLinha, 50, "Sexo: ", oFontNegr, , , , ,                                    )
+            oPrintPvt:SayAlign(nLinha, 300, AllTrim(QRY_PES->ZZ1_SEXO), oFontNormal, , , , ,               )
+            nLinha += 40
+            oPrintPvt:Say(nLinha, 50, "Data de Nascimento: ", oFontNegr, , , , ,                           )
+            oPrintPvt:Say(nLinha, 300, AllTrim(DtoC(QRY_PES->ZZ1_DTNASC)), oFontNormal, , , , ,            )
+            nLinha += 40
+            oPrintPvt:Say(nLinha, 50, "Idade: ", oFontNegr, , , , ,                                        )
+            oPrintPvt:Say(nLinha, 300, AllTrim(cValToChar(QRY_PES->ZZ1_IDADE)), oFontNormal, , , , ,       )
+            nLinha += 40
+            oPrintPvt:Say(nLinha, 50, "CEP: ", oFontNegr, , , , ,                                          )
+            oPrintPvt:Say(nLinha, 300, AllTrim(QRY_PES->ZZ1_CEP), oFontNormal, , , , ,                     )
+            nLinha += 40
+            oPrintPvt:Say(nLinha, 50, "Endereço: ", oFontNegr, , , , ,                                     )
+            oPrintPvt:Say(nLinha, 300, AllTrim(QRY_PES->ZZ1_RUA), oFontNormal, , , , ,                     )
+            nLinha += 40
+            oPrintPvt:Say(nLinha, 50, "Número de Endereço: ", oFontNegr, , , , ,                           )
+            oPrintPvt:Say(nLinha, 300, AllTrim(cValToChar(QRY_PES->ZZ1_NUMRUA)), oFontNormal, , , , ,      )
+            nLinha += 40
+            oPrintPvt:Say(nLinha, 50, "UF: ", oFontNegr, , , , ,                                           )
+            oPrintPvt:Say(nLinha, 300, AllTrim(QRY_PES->ZZ1_UF), oFontNormal, , , , ,                      )
+            nLinha += 40
+            oPrintPvt:Say(nLinha, 50, "Município: ", oFontNegr, , , , ,                                    )
+            oPrintPvt:Say(nLinha, 300, AllTrim(QRY_PES->ZZ1_MUNICI), oFontNormal, , , , ,                  )
+            nLinha += 40
+            oPrintPvt:Say(nLinha, 50, "E-mail: ", oFontNegr, , , , ,                                       )
+            oPrintPvt:Say(nLinha, 300, AllTrim(QRY_PES->ZZ1_EMAIL), oFontNormal, , , , ,                   )
+            nLinha += 40
+            oPrintPvt:Say(nLinha, 50, "DDD: ", oFontNegr, , , , ,                                          )
+            oPrintPvt:Say(nLinha, 300, AllTrim(QRY_PES->ZZ1_DDD), oFontNormal, , , , ,                     )
+            nLinha += 40
+            oPrintPvt:Say(nLinha, 50, "Telefone: ", oFontNegr, , , , ,                                     )
+            oPrintPvt:Say(nLinha, 300, AllTrim(QRY_PES->ZZ1_FONE), oFontNormal, , , , ,                    )
+            nLinha += 40    
+
+            fImpRod()
+
+            QRY_PES->(DbSkip())
+
+        EndDo
+
+        QRY_PES->(DbCloseArea())
 
     EndIf
 
@@ -168,3 +224,15 @@ Static Function fMontaRel(oProc, cCodDe, cCodAt)
 
 Return oPrintPvt
 
+Static Function fImpCab()
+
+    oPrintPvt:SayAlign(50, 0, "Cadastro de Pessoa", oFontTit, 500, 200, , 2, 0)
+
+Return
+
+Static Function fImpRod()
+
+    oPrintPvt:SayAlign(800, 50, "Empresa: ", oFontNormal, 500, 200, , , )
+    oPrintPvt:SayAlign(800, 100, cEmpAnt, oFontNormal, 500, 200, , , )
+
+Return
