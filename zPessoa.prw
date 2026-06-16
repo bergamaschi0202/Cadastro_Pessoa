@@ -43,7 +43,8 @@ Static Function MenuDef()
     ADD OPTION aRotina TITLE "Alterar" ACTION "VIEWDEF.zPessoa" OPERATION 4 ACCESS 0
     ADD OPTION aRotina TITLE "Excluir" ACTION "VIEWDEF.zPessoa" OPERATION 5 ACCESS 0
     ADD OPTION aRotina TITLE "Copiar" ACTION "VIEWDEF.zPessoa" OPERATION 9 ACCESS 0
-    ADD OPTION aRotina TITLE "Imprir Cadastro" ACTION "U_Imprimir()" OPERATION 1 ACCESS 0
+    ADD OPTION aRotina TITLE "Imprir Relatório" ACTION "U_Imprimir()" OPERATION 1 ACCESS 0
+    ADD OPTION aRotina TITLE "Enviar e-mail com Relatório" ACTION "U_EnvEmail()" OPERATION 1 ACCESS 0
 
 Return aRotina
 
@@ -108,7 +109,7 @@ User Function Imprimir()
         cCodDe := aReturn[1]
         cCodAt := aReturn[2]
 
-        oProcess := MsNewProcess():New({|| fMontaRel(@oProcess, cCodDe, cCodAt) }, "Impressão de Cadastros de Pessoas", "Processando", .F.)
+        oProcess := MsNewProcess():New({|| fMontaRel(@oProcess, cCodDe, cCodAt) }, "Impressão do Relatório de Cadastros de Pessoas", "Processando...", .F.)
         oProcess:Activate()
     EndIf
 
@@ -130,9 +131,16 @@ Static Function fMontaRel(oProc, cCodDe, cCodAt)
     Local nLinha := 0
     Local nWidthText := 0
     Local cSexoN := 0
-    Private oFontNormal := TFont():New('Arial', , 15, .F.)
-    Private oFontNegr := TFont():New('Arial', , 15, .T.)
-    Private oFontTit := TFont():New('Arial', , 30, .T.)
+
+    //Máscaras
+    Local cMaskTel := "@R 99999-9999"
+    Local cMaskCEP := "@R 99999-999"
+    Local cMaskDDD := "@R (99)"
+
+    Private oFontTit := TFont():New('Arial', , 30, ,.T.)
+    Private oFontNegr := TFont():New('Arial', , 15, ,.T.)
+    Private oFontNormal := TFont():New('Arial', , 15, ,.F.)
+    Private oFontRod := TFont():New('Arial', , 13, ,.F.)
     Private oPrintPvt
 
     oPrintPvt := FWMSPrinter():New(cNomeRel, IMP_PDF, .F., "", .T.)
@@ -189,56 +197,52 @@ Static Function fMontaRel(oProc, cCodDe, cCodAt)
             // Imprimi os dados
             oPrintPvt:Say(nLinha, 50, "Código: ", oFontNegr, , , , ,                                                      )
             nWidthText := oPrintPvt:GetTextWidth("Código: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 70, AllTrim(QRY_PES->ZZ1_COD), oFontNormal, , , , ,                        )
+            oPrintPvt:Say(nLinha, nWidthText - 100, AllTrim(QRY_PES->ZZ1_COD), oFontNormal, , , , ,                       )
             nLinha += 40
             oPrintPvt:Say(nLinha, 50, "Nome: ", oFontNegr, , , , ,                                                        )
             nWidthText := oPrintPvt:GetTextWidth("Nome: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 60, AllTrim(QRY_PES->ZZ1_NOME), oFontNormal, , , , ,                       )
+            oPrintPvt:Say(nLinha, nWidthText - 72, AllTrim(QRY_PES->ZZ1_NOME), oFontNormal, , , , ,                       )
             nLinha += 40
             oPrintPvt:Say(nLinha, 50, "Sexo: ", oFontNegr, , , , ,                                                        )
             nWidthText := oPrintPvt:GetTextWidth("Sexo: ", oFontNegr, 0)
             cSexoN := AllTrim(QRY_PES->ZZ1_SEXO)
-            oPrintPvt:Say(nLinha, nWidthText - 40, fVerifSexo(cSexoN), oFontNormal, , , , ,                               )
+            oPrintPvt:Say(nLinha, nWidthText - 51, fVerifSexo(cSexoN), oFontNormal, , , , ,                               )
             nLinha += 40
             oPrintPvt:Say(nLinha, 50, "Data de Nascimento: ", oFontNegr, , , , ,                                          )
             nWidthText := oPrintPvt:GetTextWidth("Data de Nascimento: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 274, AllTrim(DtoC(QRY_PES->ZZ1_DTNASC)), oFontNormal, , , , ,              )
+            oPrintPvt:Say(nLinha, nWidthText - 305, AllTrim(DtoC(QRY_PES->ZZ1_DTNASC)), oFontNormal, , , , ,              )
             nLinha += 40
             oPrintPvt:Say(nLinha, 50, "Idade: ", oFontNegr, , , , ,                                                       )
             nWidthText := oPrintPvt:GetTextWidth("Idade: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 45, AllTrim(cValToChar(QRY_PES->ZZ1_IDADE)), oFontNormal, , , , ,          )
+            oPrintPvt:Say(nLinha, nWidthText - 61, AllTrim(cValToChar(QRY_PES->ZZ1_IDADE)), oFontNormal, , , , ,          )
             nLinha += 40
             oPrintPvt:Say(nLinha, 50, "CEP: ", oFontNegr, , , , ,                                                         )
             nWidthText := oPrintPvt:GetTextWidth("CEP: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 35, AllTrim(QRY_PES->ZZ1_CEP), oFontNormal, , , , ,                        )
+            oPrintPvt:Say(nLinha, nWidthText - 43, AllTrim(Transform(QRY_PES->ZZ1_CEP, cMaskCEP)), oFontNormal, , , , ,   )
             nLinha += 40
             oPrintPvt:Say(nLinha, 50, "Endereço: ", oFontNegr, , , , ,                                                    )
             nWidthText := oPrintPvt:GetTextWidth("Endereço: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 106, AllTrim(QRY_PES->ZZ1_RUA), oFontNormal, , , , ,                       )
+            oPrintPvt:Say(nLinha, nWidthText - 128, AllTrim(QRY_PES->ZZ1_RUA), oFontNormal, , , , ,                       )
             nLinha += 40
             oPrintPvt:Say(nLinha, 50, "Número de Endereço: ", oFontNegr, , , , ,                                          )
             nWidthText := oPrintPvt:GetTextWidth("Número de Endereço: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 286, AllTrim(cValToChar(QRY_PES->ZZ1_NUMRUA)), oFontNormal, , , , ,        )
+            oPrintPvt:Say(nLinha, nWidthText - 320, AllTrim(cValToChar(QRY_PES->ZZ1_NUMRUA)), oFontNormal, , , , ,        )
             nLinha += 40
             oPrintPvt:Say(nLinha, 50, "UF: ", oFontNegr, , , , ,                                                          )
             nWidthText := oPrintPvt:GetTextWidth("UF: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 16, AllTrim(QRY_PES->ZZ1_UF), oFontNormal, , , , ,                         )
+            oPrintPvt:Say(nLinha, nWidthText - 21, AllTrim(QRY_PES->ZZ1_UF), oFontNormal, , , , ,                         )
             nLinha += 40
             oPrintPvt:Say(nLinha, 50, "Município: ", oFontNegr, , , , ,                                                   )
             nWidthText := oPrintPvt:GetTextWidth("Município: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 113, AllTrim(QRY_PES->ZZ1_MUNICI), oFontNormal, , , , ,                    )
+            oPrintPvt:Say(nLinha, nWidthText - 139, AllTrim(QRY_PES->ZZ1_MUNICI), oFontNormal, , , , ,                    )
             nLinha += 40
             oPrintPvt:Say(nLinha, 50, "E-mail: ", oFontNegr, , , , ,                                                      )
             nWidthText := oPrintPvt:GetTextWidth("E-mail: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 70, AllTrim(QRY_PES->ZZ1_EMAIL), oFontNormal, , , , ,                      )
+            oPrintPvt:Say(nLinha, nWidthText - 73, AllTrim(QRY_PES->ZZ1_EMAIL), oFontNormal, , , , ,                      )
             nLinha += 40
-            oPrintPvt:Say(nLinha, 50, "DDD: ", oFontNegr, , , , ,                                                         )
-            nWidthText := oPrintPvt:GetTextWidth("DDD: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 50, AllTrim(QRY_PES->ZZ1_DDD), oFontNormal, , , , ,                        )
-            nLinha += 40
-            oPrintPvt:Say(nLinha, 50, "Telefone: ", oFontNegr, , , , ,                                                    )
+            oPrintPvt:Say(nLinha, 50, "Telefone: ", oFontNegr, , , , ,                                                         )
             nWidthText := oPrintPvt:GetTextWidth("Telefone: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 92, AllTrim(QRY_PES->ZZ1_FONE), oFontNormal, , , , ,                       )
+            oPrintPvt:Say(nLinha, nWidthText - 115, AllTrim(Transform(QRY_PES->ZZ1_DDD, cMaskDDD)) + " " + AllTrim(Transform(QRY_PES->ZZ1_FONE, cMaskTel)), oFontNormal, , , , ,)
             nLinha += 40    
 
             // Linha
@@ -270,6 +274,10 @@ Imprime o Cabeçalho
 /*/
 Static Function fImpCab()
 
+    Local cLogoPath := "\img\Logo.bmp"
+
+    oPrintPvt:SayBitmap( , 20, cLogoPath, 50, 50)
+    Alert(File(cLogoPath))
     oPrintPvt:SayAlign(80, 5, "Cadastro de Pessoa", oFontTit, 550, 500, , 2, 0)
 
 Return
@@ -286,11 +294,13 @@ Static Function fImpRod()
     Local cHora := Time()
 
     //Empresa
-    oPrintPvt:SayAlign(800, 50, "Empresa: ", oFontNormal, 500, 200, , , )
-    oPrintPvt:SayAlign(800, 110, cEmpAnt, oFontNormal, 500, 200, , , )
+    oPrintPvt:SayAlign(800, 50, "Empresa: " + cEmpAnt,             oFontRod, 500, 200, , , )
 
-    oPrintPvt:SayAlign(800, 250, DtoC(dData), oFontNormal, 500, 200, , , )
-    oPrintPvt:SayAlign(800, 463, cHora, oFontNormal, 500, 200, , , )
+    // Usuário
+    oPrintPvt:SayAlign(800, 220, "Usuário: " + cUserName,          oFontRod, 500, 200, , , )
+
+    // Data e Hora
+    oPrintPvt:SayAlign(800, 406, DtoC(dData) + " - " + cHora,      oFontRod, 500, 200, , , )
 
 Return
 
@@ -311,3 +321,17 @@ Static Function fVerifSexo(cSexoN)
     EndIf
 
 Return cSexoText
+
+User Function EnvEmail()
+    // Variáveis
+    Local cPara := "arthurbergamaschi82gmail.com"
+    Local cAssunto := "Envio anexo do Relatório de Cadastro de Pessoa"
+    Local cCorpo := "Segue anexo o Relatório dos cadastro de pessoa de sistema"
+    Local aAnexos := {"C:\Users\berga\AppData\Local\Temp\"}
+    Local lMostraLog := .T.
+    Local lUsaTLS := .T.
+
+    oProcess := MsNewProcess():New({|| u_zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)}, "Envio de Relatório via e-mail", "Processando...", .F.)
+    oProcess:Activate()
+
+Return
