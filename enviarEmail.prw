@@ -1,18 +1,19 @@
-//Bibliotecas
-#Include "Protheus.ch"
-  
-/*/{Protheus.doc} zEnvMail
+//Biblioteca
+#Include "Totvs.ch"
+#Include "Prtopdef.ch"
+
+/*{Protheus.doc} zEnvMail
 Função para disparo do e-mail utilizando TMailMessage e tMailManager com opção de múltiplos anexos
 @author Atilio
 @since 26/05/2017
 @version 1.0
 @type function
-    @param cPara, characters, Destinatário que irá receber o e-Mail
-    @param cAssunto, characters, Assunto do e-Mail
-    @param cCorpo, characters, Corpo do e-Mail (com suporte à html)
-    @param aAnexos, array, Anexos que estarão no e-mail (devem estar na mesma pasta da protheus data)
-    @param lMostraLog, logical, Define se será mostrado mensagem de log ao usuário (uma tela de aviso)
-    @param lUsaTLS, logical, Define se irá utilizar o protocolo criptográfico TLS
+    @param cPara, characters, Destinatário que irá receber o e-Mail,
+    @param cAssunto, characters, Assunto do e-Mail,
+    @param cCorpo, characters, Corpo do e-Mail (com suporte à html),
+    @param aAnexos, array, Anexos que estarão no e-mail (devem estar na mesma pasta da protheus data),
+    @param lMostraLog, logical, Define se será mostrado mensagem de log ao usuário (uma tela de aviso),
+    @param lUsaTLS, logical, Define se irá utilizar o protocolo criptográfico TLS,
     @return lRet, Retorna se houve falha ou não no disparo do e-Mail
 @example Exemplos:
     -----
@@ -32,8 +33,8 @@ Função para disparo do e-mail utilizando TMailMessage e tMailManager com opção d
     * MV_RELPSW  - Senha de login do e-Mail    - Ex.: senha
     * MV_RELSERV - Servidor SMTP do e-Mail     - Ex.: smtp.servidor.com.br:587
     * MV_RELTIME - TimeOut do e-Mail           - Ex.: 120
-/*/
-  
+*/
+
 User Function zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)
     Local aArea        := GetArea()
     Local nAtual       := 0
@@ -49,12 +50,21 @@ User Function zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)
     Local nPort        := Iif(':' $ cSrvFull, Val(SubStr(cSrvFull, At(':', cSrvFull)+1, Len(cSrvFull))), 587)
     Local nTimeOut     := GetMV("MV_RELTIME")
     Local cLog         := ""
+    Local cRes         := ""
+    Local cAnexo       := ""
+    Local nAnexoCont   := 0
     Default cPara      := ""
     Default cAssunto   := ""
     Default cCorpo     := ""
     Default aAnexos    := {}
-    Default lMostraLog := .F.
-    Default lUsaTLS    := .F.
+    Default lMostraLog := .T.
+    Default lUsaTLS    := .T.
+
+    For nAtual := 1 To Len(aAnexos)
+        cAnexo += aAnexos[nAtual]
+        nAnexoCont += 1
+    Next
+    Alert("Caminho do anexo: " + cAnexo + CRLF + "Qnt de itens no anexo: " + cValtoChar(nAnexoCont))
   
     //Se tiver em branco o destinatário, o assunto ou o corpo do email
     If Empty(cPara) .Or. Empty(cAssunto) .Or. Empty(cCorpo)
@@ -77,9 +87,11 @@ User Function zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)
         For nAtual := 1 To Len(aAnexos)
             //Se o arquivo existir
             If File(aAnexos[nAtual])
-  
-                //Anexa o arquivo na mensagem de e-Mail
-                nRet := oMsg:AttachFile(aAnexos[nAtual])
+                Alert(aAnexos[nAtual])
+                // Alert("Arquivo: " + aAnexos[nAtual] + CRLF + "Existe? " + cValToChar(File(aAnexos[nAtual])) + CRLF + "Tamanho: " + cValToChar(FSize(aAnexos[nAtual])))
+                // Anexa o arquivo na mensagem de e-Mail
+                nRet := oMsg:AttachFile("\anexo\000001.pdf")
+                Alert("AttachFile() resultado: " + cValToChar(nRet))
                 If nRet < 0
                     cLog += "002 - Nao foi possivel anexar o arquivo '"+aAnexos[nAtual]+"'!" + CRLF
                 EndIf
@@ -97,9 +109,19 @@ User Function zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)
         If lUsaTLS
             oSrv:SetUseTLS(.T.)
         EndIf
-  
+
+        /*/
+        Alert("ServidorFull: " + cSrvFull)
+        Alert("From: " + cFrom)
+        Alert("User: " + cUser)
+        Alert("Senha: " + cPass)
+        Alert("Server: " + cServer)
+        Alert("TimeOut: " + cValToChar(nTimeOut))
+        /*/
+
         //Inicializa conexão
         nRet := oSrv:Init("", cServer, cUser, cPass, 0, nPort)
+
         If nRet != 0
             cLog += "004 - Nao foi possivel inicializar o servidor SMTP: " + oSrv:GetErrorString(nRet) + CRLF
             lRet := .F.
@@ -111,7 +133,7 @@ User Function zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)
             If nRet != 0
                 cLog += "005 - Nao foi possivel definir o TimeOut '"+cValToChar(nTimeOut)+"'" + CRLF
             EndIf
-  
+
             //Conecta no servidor
             nRet := oSrv:SMTPConnect()
             If nRet <> 0
@@ -158,6 +180,16 @@ User Function zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)
             Aviso("Log", cLog, {"Ok"}, 2)
         EndIf
     EndIf
-  
+    
+    If nRet = 0
+        cRes := "zEnvMail - "+dToC(Date())+ " " + Time() + CRLF + CRLF
+        cRes := "E-mail enviado com sucesso"
+        Aviso("Status e-mail", cRes, {"Ok"}, 1)
+    Else
+        cRes := "zEnvMail - "+dToC(Date())+ " " + Time() + CRLF + CRLF
+        cRes := "O e-mail não pode ser enviado"
+        Aviso("Status e-mail", cRes, {"Ok"}, 2)
+    EndIf
+
     RestArea(aArea)
 Return lRet
