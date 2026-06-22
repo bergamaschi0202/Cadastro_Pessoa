@@ -4,8 +4,7 @@
 
 /*{Protheus.doc} zEnvMail
 Função para disparo do e-mail utilizando TMailMessage e tMailManager com opção de múltiplos anexos
-@author Atilio
-@since 26/05/2017
+@since 15/06/2026
 @version 1.0
 @type function
     @param cPara, characters, Destinatário que irá receber o e-Mail,
@@ -53,6 +52,8 @@ User Function zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)
     Local cRes         := ""
     Local cAnexo       := ""
     Local nAnexoCont   := 0
+    Local cRootPath    := ""
+    Local cAttach      := ""
     Default cPara      := ""
     Default cAssunto   := ""
     Default cCorpo     := ""
@@ -87,10 +88,11 @@ User Function zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)
         For nAtual := 1 To Len(aAnexos)
             //Se o arquivo existir
             If File(aAnexos[nAtual])
-                Alert(aAnexos[nAtual])
-                // Alert("Arquivo: " + aAnexos[nAtual] + CRLF + "Existe? " + cValToChar(File(aAnexos[nAtual])) + CRLF + "Tamanho: " + cValToChar(FSize(aAnexos[nAtual])))
+                cRootPath := GetSrvProfString("RootPath", "")
+                cAttach := SubStr(aAnexos[nAtual], Len(cRootPath) + 1)
+
                 // Anexa o arquivo na mensagem de e-Mail
-                nRet := oMsg:AttachFile("\anexo\000001.pdf")
+                nRet := oMsg:AttachFile(cAttach)
                 Alert("AttachFile() resultado: " + cValToChar(nRet))
                 If nRet < 0
                     cLog += "002 - Nao foi possivel anexar o arquivo '"+aAnexos[nAtual]+"'!" + CRLF

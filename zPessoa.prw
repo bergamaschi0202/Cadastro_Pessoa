@@ -101,8 +101,11 @@ User Function Imprimir()
     Local cCodAt     := "999999"
     Local aReturn    := {}
     Local cPath      := GetTempPath()
-    Local cCall      := "I"
     Local oProcess
+
+    u_gCEPLog(ZZ1_CEP)
+
+    Alert ("Caminho da impressão: " + cPath)
 
     aAdd(aPergs, {1, "Pessoa De", cCodDe, "", ".T.", "ZZ1", ".T.", 6, .T.})
     aAdd(aPergs, {1, "Pessoa Até", cCodAt, "", ".T.", "ZZ1", ".T.", 6, .T.})
@@ -111,7 +114,7 @@ User Function Imprimir()
         cCodDe := aReturn[1]
         cCodAt := aReturn[2]
 
-        oProcess := MsNewProcess():New({|| u_MontaRel(@oProcess, cCodDe, cCodAt, cPath, cCall) }, "Impressão do Relatório de Cadastros de Pessoas", "Processando...", .F.)
+        oProcess := MsNewProcess():New({|| u_MontaRel(@oProcess, cCodDe, cCodAt, cPath) }, "Impressão do Relatório de Cadastros de Pessoas", "Processando...", .F.)
         oProcess:Activate()
     EndIf
 
@@ -124,7 +127,7 @@ User Function que monta o relatório
 @version 1.0
 @type function
 /*/
-User Function MontaRel(oProc, cCodDe, cCodAt, cPath, cCall)
+User Function MontaRel(oProc, cCodDe, cCodAt, cPath)
     Local cQryPes       := ""
     Local cCod          := ZZ1->ZZ1_COD
     Local nCodDeN       := 0
@@ -179,8 +182,10 @@ User Function MontaRel(oProc, cCodDe, cCodAt, cPath, cCall)
     cQryPes += "    ZZ1_CEP, "                          + CRLF
     cQryPes += "    ZZ1_RUA, "                          + CRLF
     cQryPes += "    ZZ1_NUMRUA, "                       + CRLF
-    cQryPes += "    ZZ1_UF, "                           + CRLF
+    cQryPes += "    ZZ1_BAIRRO, "                       + CRLF
     cQryPes += "    ZZ1_MUNICI, "                       + CRLF
+    cQryPes += "    ZZ1_UF, "                           + CRLF
+    cQryPes += "    ZZ1_PAIS, "                         + CRLF
     cQryPes += "    ZZ1_EMAIL, "                        + CRLF
     cQryPes += "    ZZ1_DDD, "                          + CRLF
     cQryPes += "    ZZ1_FONE "                          + CRLF
@@ -247,13 +252,21 @@ User Function MontaRel(oProc, cCodDe, cCodAt, cPath, cCall)
             nWidthText := oPrintPvt:GetTextWidth("Número de Endereço: ", oFontNegr, 0)
             oPrintPvt:Say(nLinha, nWidthText - 320, AllTrim(cValToChar(QRY_PES->ZZ1_NUMRUA)),                                                               oFontNormal, , , , , )
             nLinha += 40
-            oPrintPvt:Say(nLinha, 50, "UF: ",                                                                                                                 oFontNegr, , , , , )
-            nWidthText := oPrintPvt:GetTextWidth("UF: ", oFontNegr, 0)
-            oPrintPvt:Say(nLinha, nWidthText - 21, AllTrim(QRY_PES->ZZ1_UF),                                                                                oFontNormal, , , , , )
+            oPrintPvt:Say(nLinha, 50, "Bairro: ",                                                                                                          oFontNegr, , , , , )
+            nWidthText := oPrintPvt:GetTextWidth("Bairro: ", oFontNegr, 0)
+            oPrintPvt:Say(nLinha, nWidthText - 75, AllTrim(QRY_PES->ZZ1_BAIRRO),                                                                           oFontNormal, , , , , )
             nLinha += 40
             oPrintPvt:Say(nLinha, 50, "Município: ",                                                                                                          oFontNegr, , , , , )
             nWidthText := oPrintPvt:GetTextWidth("Município: ", oFontNegr, 0)
             oPrintPvt:Say(nLinha, nWidthText - 139, AllTrim(QRY_PES->ZZ1_MUNICI),                                                                           oFontNormal, , , , , )
+            nLinha += 40
+            oPrintPvt:Say(nLinha, 50, "UF: ",                                                                                                                 oFontNegr, , , , , )
+            nWidthText := oPrintPvt:GetTextWidth("UF: ", oFontNegr, 0)
+            oPrintPvt:Say(nLinha, nWidthText - 21, AllTrim(QRY_PES->ZZ1_UF),                                                                                oFontNormal, , , , , )
+            nLinha += 40
+            oPrintPvt:Say(nLinha, 50, "País: ",                                                                                                          oFontNegr, , , , , )
+            nWidthText := oPrintPvt:GetTextWidth("País: ", oFontNegr, 0)
+            oPrintPvt:Say(nLinha, nWidthText - 38, AllTrim(QRY_PES->ZZ1_PAIS),                                                                           oFontNormal, , , , , )
             nLinha += 40
             oPrintPvt:Say(nLinha, 50, "E-mail: ",                                                                                                             oFontNegr, , , , , )
             nWidthText := oPrintPvt:GetTextWidth("E-mail: ", oFontNegr, 0)
@@ -280,15 +293,13 @@ User Function MontaRel(oProc, cCodDe, cCodAt, cPath, cCall)
 
     EndIf
 
-    If cCall = "I"
-        oPrintPvt:Preview()
-    EndIf
+    oPrintPvt:Preview()
 
     If File(cPath + "\*.pdf")
         cRes := "Relatório criado em " + cPath"
         Aviso("Relatório", cRes, {"Ok"}, 1)
     Else
-        cRes := "Não foi criado nenhum relatório"
+        cRes := "Não foi criado nenhum relatório" + CRLF + "Caminho: " + cPath + ""
         Aviso("Relatório", cRes, {"Ok"}, 2)
     EndIf
 
@@ -374,7 +385,6 @@ User Function EnvEmail()
     Local cCod          := ZZ1->ZZ1_COD
     Local cAnexoCont    := cAnexoPath + cCod + ".pdf"
     Alert("cAnexoCont: " + cAnexoCont)
-    Local cCall         := "E"
 
     Local oProcess
 
@@ -394,7 +404,7 @@ User Function EnvEmail()
         "<small>Esta é uma mensagem automática. Por favor, não responda este e-mail.</small>" + ;
         "</body></html>"
 
-    oProcess := MsNewProcess():New({|| u_MontaRel(@oProcess, cCod, cCod, cAnexoPath, cCall), u_zEnvMail(cPara, cAssunto, cCorpo, aAnexo, lMostraLog, lUsaTLS)}, "Envio de Relatório via e-mail", "Processando...", .F.)
+    oProcess := MsNewProcess():New({|| u_MontaRel(@oProcess, cCod, cCod, cAnexoPath), u_zEnvMail(cPara, cAssunto, cCorpo, aAnexo, lMostraLog, lUsaTLS)}, "Envio de Relatório via e-mail", "Processando...", .F.)
     oProcess:Activate()
 
 Return
