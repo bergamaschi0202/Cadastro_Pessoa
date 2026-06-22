@@ -2,11 +2,9 @@
 #Include "Totvs.ch"
 
 /*/{Protheus.doc} zViaCep
-[API.VIACEP] [GET] Conecta na Api gratuita da ViaCep para retornar dados de um Endere√ßo
-a partir do CEP.
-Campos Disponiveis na API:  
+[API.VIACEP] [GET] Conecta na Api gratuita da ViaCep para retornar dados de um EndereÁo a partir do CEP.
+Campos que s„o coletados na na API:
 BAIRRO, LOCALIDADE, LOGRADOURO, UF
-Uso: Incluir/Atualizar CC2 quando necess√°rio
 @since      19/06/2026
 /*/
 User Function zViaCep(cCep)
@@ -31,7 +29,6 @@ User Function zViaCep(cCep)
     If oRestClient:Get(aHeader)
             
         jJson:FromJson(oRestClient:CRESULT)          
-   
         //Se as keys n√£o existirem, cria elas com conteudo vazio.
         jJson['logradouro'] := Iif( ValType(jJson['logradouro'])  != "U", jJson['logradouro'] , "")
         jJson['bairro']     := Iif( ValType(jJson['bairro'])      != "U", jJson['bairro']     , "")

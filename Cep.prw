@@ -17,6 +17,7 @@ User Function Cep()
        
     // Se não veio erro
     If Type("jJson[erro]") == "U"
+    
         // Atualiza os campos com o retorno da função
         M->ZZ1_RUA      := AllTrim(jJson['logradouro'])
         M->ZZ1_BAIRRO   := AllTrim(jJson['bairro'])

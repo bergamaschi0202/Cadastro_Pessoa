@@ -45,10 +45,11 @@ Static Function MenuDef()
     ADD OPTION aRotina TITLE "Copiar" ACTION "VIEWDEF.zPessoa" OPERATION 9 ACCESS 0
     ADD OPTION aRotina TITLE "Imprir Relatório" ACTION "U_Imprimir()" OPERATION 1 ACCESS 0
     ADD OPTION aRotina TITLE "Enviar e-mail com Relatório" ACTION "U_EnvEmail()" OPERATION 1 ACCESS 0
+    ADD OPTION aRotina TITLE "Exportar para Exel" ACTION "U_ExpExel()" OPERATION 1 ACCESS 0
 
 Return aRotina
 
-/*/{Protheus.doc} MenuDef
+/*/{Protheus.doc} ModelDef
 Model de dados
 @author Arthur Bergamaschi
 @since 11/06/2026
@@ -67,7 +68,7 @@ Static Function ModelDef()
 
 Return oModel
 
-/*/{Protheus.doc} MenuDef
+/*/{Protheus.doc} ViewDef
 View dos campos
 @author Arthur Bergamaschi
 @since 12/06/2026
@@ -102,10 +103,6 @@ User Function Imprimir()
     Local aReturn    := {}
     Local cPath      := GetTempPath()
     Local oProcess
-
-    u_gCEPLog(ZZ1_CEP)
-
-    Alert ("Caminho da impressão: " + cPath)
 
     aAdd(aPergs, {1, "Pessoa De", cCodDe, "", ".T.", "ZZ1", ".T.", 6, .T.})
     aAdd(aPergs, {1, "Pessoa Até", cCodAt, "", ".T.", "ZZ1", ".T.", 6, .T.})
@@ -346,7 +343,7 @@ Static Function fImpRod()
 
 Return
 
-/*/{Protheus.doc} fVerificaSexo
+/*/{Protheus.doc} fVerifSexo
 Função que recebe o código do sexo e retorna se Masculino ou Feminino
 @author Arthur Bergamaschi
 @since 16/06/2026
@@ -377,14 +374,12 @@ User Function EnvEmail()
     Local cAssunto      := ""
     Local cCorpo        := ""
     Local cAnexoPath    := GetSrvProfString("RootPath", "") + "\anexo\"
-    Alert("cAnexoPath: " + cAnexoPath)
     Local aAnexo        := {}
     Local lMostraLog    := .T.
     Local lUsaTLS       := .T.
 
     Local cCod          := ZZ1->ZZ1_COD
     Local cAnexoCont    := cAnexoPath + cCod + ".pdf"
-    Alert("cAnexoCont: " + cAnexoCont)
 
     Local oProcess
 
@@ -406,5 +401,37 @@ User Function EnvEmail()
 
     oProcess := MsNewProcess():New({|| u_MontaRel(@oProcess, cCod, cCod, cAnexoPath), u_zEnvMail(cPara, cAssunto, cCorpo, aAnexo, lMostraLog, lUsaTLS)}, "Envio de Relatório via e-mail", "Processando...", .F.)
     oProcess:Activate()
+
+Return
+
+/*/{Protheus.doc} ExpExl
+Exibe o ParamBox e chama o MontExl()
+@author Arthur Bergamaschi
+@since 22/06/2026
+@version 1.0
+@type function
+/*/
+User Function ExpExl()
+    //Variáveis
+    Local aPergs        := {}
+    Local cCodDe        := "000001"
+    Local cCodAt        := "999999"
+    Local cSexo         := "3"
+    Local aReturn       := {}
+    Local cPath         := GetTempPath()
+    Local oProcess
+
+    aAdd(aPergs, {1, "Pessoa De",       cCodDe, "", ".T.", "ZZ1", ".T.", 6, .T.})
+    aAdd(aPergs, {1, "Pessoa Até",      cCodAt, "", ".T.", "ZZ1", ".T.", 6, .T.})
+    aAdd(aPergs, {2, "Sexo",        Val(cSexo), {"1=Maculino", "2=Feminino", "3=Todos"}, 40, ".T.", .T.})
+
+    If ParamBox(aPergs, "Informe os parâmetros", @aReturn, , , , , , , , .F., .F.)
+        cCodDe  := aReturn[1]
+        cCodAt  := aReturn[2]
+        cSexo   := cValToChar(aReturn[3])
+
+        oProcess := MsNewProcess():New({|| u_MontExel(oProcess, cCodDe, cCodAt, cSexo, cPath) }, "Exportação de relaróio para Exel", "Processando...", .F.)
+        oProcess:Activate()
+    EndIf
 
 Return

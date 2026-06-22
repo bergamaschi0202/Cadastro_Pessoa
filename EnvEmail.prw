@@ -14,24 +14,6 @@ Função para disparo do e-mail utilizando TMailMessage e tMailManager com opção d
     @param lMostraLog, logical, Define se será mostrado mensagem de log ao usuário (uma tela de aviso),
     @param lUsaTLS, logical, Define se irá utilizar o protocolo criptográfico TLS,
     @return lRet, Retorna se houve falha ou não no disparo do e-Mail
-@example Exemplos:
-    -----
-    1 - Mensagem Simples de envio
-    u_zEnvMail("teste@servidor.com.br", "Teste", "Teste TMailMessage - Protheus", , .T.)
-  
-    -----
-    2 - Mensagem com anexos (devem estar dentro da Protheus Data)
-    aAnexos := {}
-    aAdd(aAnexos, "\pasta\arquivo1.pdf")
-    aAdd(aAnexos, "\pasta\arquivo2.pdf")
-    aAdd(aAnexos, "\pasta\arquivo3.pdf")
-    u_zEnvMail("teste@servidor.com.br", "Teste", "Teste TMailMessage com anexos - Protheus", aAnexos)
-  
-@obs Deve-se configurar os parâmetros:
-    * MV_RELACNT - Conta de login do e-Mail    - Ex.: email@servidor.com.br
-    * MV_RELPSW  - Senha de login do e-Mail    - Ex.: senha
-    * MV_RELSERV - Servidor SMTP do e-Mail     - Ex.: smtp.servidor.com.br:587
-    * MV_RELTIME - TimeOut do e-Mail           - Ex.: 120
 */
 
 User Function zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)
@@ -65,8 +47,7 @@ User Function zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)
         cAnexo += aAnexos[nAtual]
         nAnexoCont += 1
     Next
-    Alert("Caminho do anexo: " + cAnexo + CRLF + "Qnt de itens no anexo: " + cValtoChar(nAnexoCont))
-  
+
     //Se tiver em branco o destinatário, o assunto ou o corpo do email
     If Empty(cPara) .Or. Empty(cAssunto) .Or. Empty(cCorpo)
         cLog += "001 - Destinatario, Assunto ou Corpo do e-Mail vazio(s)!" + CRLF
@@ -93,7 +74,6 @@ User Function zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)
 
                 // Anexa o arquivo na mensagem de e-Mail
                 nRet := oMsg:AttachFile(cAttach)
-                Alert("AttachFile() resultado: " + cValToChar(nRet))
                 If nRet < 0
                     cLog += "002 - Nao foi possivel anexar o arquivo '"+aAnexos[nAtual]+"'!" + CRLF
                 EndIf
@@ -111,15 +91,6 @@ User Function zEnvMail(cPara, cAssunto, cCorpo, aAnexos, lMostraLog, lUsaTLS)
         If lUsaTLS
             oSrv:SetUseTLS(.T.)
         EndIf
-
-        /*/
-        Alert("ServidorFull: " + cSrvFull)
-        Alert("From: " + cFrom)
-        Alert("User: " + cUser)
-        Alert("Senha: " + cPass)
-        Alert("Server: " + cServer)
-        Alert("TimeOut: " + cValToChar(nTimeOut))
-        /*/
 
         //Inicializa conexão
         nRet := oSrv:Init("", cServer, cUser, cPass, 0, nPort)
